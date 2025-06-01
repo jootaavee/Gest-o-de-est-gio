@@ -1,226 +1,234 @@
+// backend/src/controllers/user.controller.js
+
 const prisma = require("../prismaClient");
 const bcrypt = require("bcrypt");
-const { UserRole } = require("@prisma/client");
+const { UserRole, Prisma } = require("@prisma/client");
 
-// Formata dados do usuário para o padrão esperado pelo front-end
-const formatUserData = (user) => {
-  return {
-    ...user,
-    numero: user.numero, // Padroniza nome do campo
-    data_nascimento: user.data_nascimento ? 
-      new Date(user.data_nascimento).toISOString().split('T')[0] : null // Formata data
-  };
+// Configurações padrão reutilizáveis
+const defaultUserConfigurations = {
+  tema: 'light',
+  idioma: 'pt-br',
+  notificacoesEmail: true,
 };
 
-// Buscar perfil do usuário logado
+// Formata dados do usuário para enviar ao frontend
+const formatUserData = (userFromDb) => {
+  if (!userFromDb) return null;
+
+  const effectiveConfiguracoes = {
+    ...defaultUserConfigurations,
+    ...(typeof userFromDb.configuracoes === 'object' && userFromDb.configuracoes !== null 
+        ? userFromDb.configuracoes 
+        : {}),
+  };
+
+  const userToSend = { ...userFromDb };
+  delete userToSend.senha;
+  userToSend.numero = userFromDb.numero || null;
+  userToSend.data_nascimento = userFromDb.data_nascimento
+    ? new Date(userFromDb.data_nascimento).toISOString().split("T")[0]
+    : null;
+  userToSend.configuracoes = effectiveConfiguracoes;
+
+  return userToSend;
+};
+
+// 1. Buscar perfil do usuário logado
 exports.getUserProfile = async (req, res) => {
+  const userId = req.user.id;
   try {
-    const user = await prisma.user.findUnique({
-      where: { id: req.user.id },
+    const userFromDb = await prisma.user.findUnique({
+      where: { id: userId },
       select: {
-        id: true,
-        nome_completo: true,
-        email: true,
-        tipo: true,
-        numero: true,          // Será mapeado para numero
-        foto_perfil: true,
-        data_nascimento: true,
-        cpf: true,
-        curso: true,
-        periodo: true,
-        matricula: true,
+        id: true, nome_completo: true, email: true, tipo: true, numero: true,
+        foto_perfil: true, data_nascimento: true, cpf: true, curso: true,
+        periodo: true, matricula: true, configuracoes: true, // Inclui configurações
         documentos: {
           select: {
-            id: true,
-            tipo: true,
-            nome_original: true,
-            path: true,
-            data_upload: true
-          }
+            id: true, tipo: true, nome_original: true, path: true, data_upload: true
+          },
+          orderBy: { data_upload: 'desc' }
         }
       }
     });
 
-    if (!user) {
+    if (!userFromDb) {
       return res.status(404).json({ error: "Usuário não encontrado." });
     }
-
-    res.json(formatUserData(user));
+    res.status(200).json(formatUserData(userFromDb));
   } catch (error) {
-    console.error("Erro ao buscar perfil:", error);
-    res.status(500).json({ error: "Erro interno ao buscar perfil do usuário." });
+    console.error("Erro ao buscar perfil do usuário:", error);
+    res.status(500).json({ error: "Erro interno ao buscar seu perfil." });
   }
 };
 
-// Atualizar perfil do usuário logado
+// 2. Atualizar perfil principal do usuário logado
 exports.updateUserProfile = async (req, res) => {
-  const { id } = req.user;
+  const { id: userId } = req.user;
   const {
-    nome_completo,
-    numero,  // Recebe do front-end como numero
-    data_nascimento,
-    cpf,
-    curso,
-    periodo,
-    matricula,
-    email,
-    senha_antiga,
-    nova_senha,
-    confirmar_nova_senha,
-    foto_perfil
+    nome_completo, numero, data_nascimento, cpf, curso, periodo, matricula,
+    email, senha_antiga, nova_senha, confirmar_nova_senha, foto_perfil
   } = req.body;
 
   try {
-    const userToUpdate = await prisma.user.findUnique({ where: { id } });
-
+    const userToUpdate = await prisma.user.findUnique({ where: { id: userId } });
     if (!userToUpdate) {
       return res.status(404).json({ error: "Usuário não encontrado." });
     }
 
-    const dataToUpdate = {
-      nome_completo,
-      numero: numero,  // Mapeia para o campo 'numero' no banco
-      data_nascimento: data_nascimento ? new Date(data_nascimento) : undefined,
-      foto_perfil,
-      ...(userToUpdate.tipo === UserRole.ALUNO && {
-        cpf,
-        curso,
-        periodo: periodo ? parseInt(periodo, 10) : undefined,
-        matricula
-      })
-    };
+    const dataToUpdate = {};
+    if (nome_completo !== undefined) dataToUpdate.nome_completo = nome_completo;
+    if (numero !== undefined) dataToUpdate.numero = numero;
+    if (data_nascimento !== undefined) dataToUpdate.data_nascimento = data_nascimento ? new Date(data_nascimento) : null;
+    if (foto_perfil !== undefined) dataToUpdate.foto_perfil = foto_perfil;
 
-    // Validação de email
-    if (email && email !== userToUpdate.email) {
-      const existingEmail = await prisma.user.findUnique({ where: { email } });
-      if (existingEmail) {
-        return res.status(400).json({ error: "Este email já está em uso." });
+    if (userToUpdate.tipo === UserRole.ALUNO) {
+      if (cpf !== undefined) dataToUpdate.cpf = cpf;
+      if (curso !== undefined) dataToUpdate.curso = curso;
+      if (periodo !== undefined) dataToUpdate.periodo = periodo ? parseInt(periodo, 10) : null;
+      if (matricula !== undefined) dataToUpdate.matricula = matricula;
+    }
+    
+    if (email && email.toLowerCase() !== userToUpdate.email.toLowerCase()) {
+      const existingEmail = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
+      if (existingEmail && existingEmail.id !== userId) {
+        return res.status(400).json({ error: "Este e-mail já está sendo utilizado." });
       }
-      dataToUpdate.email = email;
+      dataToUpdate.email = email.toLowerCase();
     }
 
-    // Validação de senha
     if (nova_senha) {
-      if (!senha_antiga) {
-        return res.status(400).json({ error: "Confirme sua senha atual." });
-      }
-      if (nova_senha !== confirmar_nova_senha) {
-        return res.status(400).json({ error: "As novas senhas não coincidem." });
-      }
-
+      if (!senha_antiga) return res.status(400).json({ error: "Confirme sua senha atual para definir uma nova." });
+      if (nova_senha.length < 6) return res.status(400).json({ error: "A nova senha deve ter no mínimo 6 caracteres." });
+      if (nova_senha !== confirmar_nova_senha) return res.status(400).json({ error: "As novas senhas não coincidem." });
       const isMatch = await bcrypt.compare(senha_antiga, userToUpdate.senha);
-      if (!isMatch) {
-        return res.status(400).json({ error: "Senha atual incorreta." });
-      }
-
+      if (!isMatch) return res.status(400).json({ error: "Senha atual incorreta." });
       const salt = await bcrypt.genSalt(10);
       dataToUpdate.senha = await bcrypt.hash(nova_senha, salt);
     }
 
-    // Atualiza no banco
-    const updatedUser = await prisma.user.update({
-      where: { id },
+    if (Object.keys(dataToUpdate).length === 0) { // Não confunda com 'senha', que já é tratada.
+        return res.status(400).json({ error: "Nenhum dado fornecido para atualização do perfil."});
+    }
+
+    const updatedUserFromDb = await prisma.user.update({
+      where: { id: userId },
       data: dataToUpdate,
-      select: {
-        id: true,
-        nome_completo: true,
-        email: true,
-        tipo: true,
-        numero: true,
-        foto_perfil: true,
-        data_nascimento: true,
-        cpf: true,
-        curso: true,
-        periodo: true,
-        matricula: true
+      select: { 
+        id: true, nome_completo: true, email: true, tipo: true, numero: true,
+        foto_perfil: true, data_nascimento: true, cpf: true, curso: true,
+        periodo: true, matricula: true, configuracoes: true,
       }
     });
 
-    res.json({
+    res.status(200).json({
       message: "Perfil atualizado com sucesso!",
-      user: formatUserData(updatedUser)  // Formata a resposta
+      user: formatUserData(updatedUserFromDb)
     });
 
   } catch (error) {
     console.error("Erro ao atualizar perfil:", error);
-    
-    // Tratamento de erros específicos do Prisma
-    if (error.code === 'P2002') {
-      const target = error.meta?.target?.[0];
-      if (target === 'email') return res.status(400).json({ error: "Email já em uso." });
-      if (target === 'cpf') return res.status(400).json({ error: "CPF já cadastrado." });
-      if (target === 'matricula') return res.status(400).json({ error: "Matrícula já existe." });
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === 'P2002') {
+        const targetField = error.meta?.target?.[0] || error.meta?.target; // Prisma >4.0.0
+        return res.status(400).json({ error: `O campo '${Array.isArray(targetField) ? targetField.join(', ') : targetField}' já está em uso.` });
+      }
+      if (error.code === 'P2025') {
+         return res.status(404).json({ error: "Usuário não encontrado para atualização." });
+      }
     }
-
-    res.status(500).json({ error: "Erro interno ao atualizar perfil." });
+    res.status(500).json({ error: "Erro interno ao atualizar seu perfil." });
   }
 };
 
-// Buscar todos os Alunos (para técnicos)
+// 3. Atualizar CONFIGURAÇÕES do usuário logado
+exports.updateUserConfiguracoes = async (req, res) => {
+  const userId = req.user.id;
+  const { tema, idioma, notificacoesEmail } = req.body;
+
+  if (tema === undefined || idioma === undefined || notificacoesEmail === undefined) {
+    return res.status(400).json({ error: "Todos os campos de configuração (tema, idioma, notificacoesEmail) são obrigatórios." });
+  }
+  const validTemas = ['light', 'dark', 'system'];
+  if (!validTemas.includes(tema)) {
+    return res.status(400).json({ error: `Tema inválido. Valores permitidos: ${validTemas.join(', ')}.` });
+  }
+  const validIdiomas = ['pt-br', 'en'];
+  if (!validIdiomas.includes(idioma)) {
+    return res.status(400).json({ error: `Idioma inválido. Valores permitidos: ${validIdiomas.join(', ')}.` });
+  }
+  if (typeof notificacoesEmail !== 'boolean') {
+    return res.status(400).json({ error: "O campo 'notificacoesEmail' deve ser um valor booleano (true ou false)." });
+  }
+
+  const novasConfiguracoes = { tema, idioma, notificacoesEmail };
+
+  try {
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: { configuracoes: novasConfiguracoes },
+      select: { configuracoes: true }
+    });
+
+    if (!updatedUser) {
+      return res.status(404).json({ error: "Usuário não encontrado para atualizar configurações." });
+    }
+
+    res.status(200).json({
+      message: "Suas configurações foram atualizadas com sucesso!",
+      configuracoes: updatedUser.configuracoes,
+    });
+  } catch (error) {
+    console.error("Erro ao atualizar configurações do usuário:", error);
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+      return res.status(404).json({ error: 'Usuário não encontrado.' });
+    }
+    res.status(500).json({ error: "Erro interno ao salvar suas configurações." });
+  }
+};
+
+// 4. Buscar todos os Alunos (para Admin/Técnico)
 exports.getAllAlunos = async (req, res) => {
   try {
     const alunos = await prisma.user.findMany({
       where: { tipo: UserRole.ALUNO },
       select: {
-        id: true,
-        nome_completo: true,
-        email: true,
-        numero: true,
-        curso: true,
-        periodo: true,
-        matricula: true
+        id: true, nome_completo: true, email: true, numero: true,
+        curso: true, periodo: true, matricula: true, foto_perfil: true,
       },
       orderBy: { nome_completo: 'asc' }
     });
-
-    // Formata os dados de saída
-    const formattedAlunos = alunos.map(aluno => ({
-      ...aluno,
-      numero: aluno.numero
-    }));
-
-    res.json(formattedAlunos);
+    res.status(200).json(alunos.map(aluno => formatUserData(aluno)));
   } catch (error) {
     console.error("Erro ao buscar alunos:", error);
-    res.status(500).json({ error: "Erro interno ao buscar alunos." });
+    res.status(500).json({ error: "Erro interno ao buscar a lista de alunos." });
   }
 };
 
-// Buscar Aluno por ID (para técnicos)
+// 5. Buscar Aluno por ID (para Admin/Técnico)
 exports.getAlunoById = async (req, res) => {
+  const { id: alunoId } = req.params;
   try {
-    const aluno = await prisma.user.findUnique({
-      where: { 
-        id: req.params.id, 
-        tipo: UserRole.ALUNO 
-      },
+    const alunoFromDb = await prisma.user.findUnique({
+      where: { id: alunoId, tipo: UserRole.ALUNO },
       include: {
-        documentos: {
-          select: {
-            id: true,
-            tipo: true,
-            nome_original: true,
-            path: true,
-            data_upload: true
-          }
+        documentos: { orderBy: { data_upload: 'desc'} },
+        candidaturas: { 
+            include: { vaga: { select: { id: true, titulo: true, empresa: true } } },
+            orderBy: { data_candidatura: 'desc'}
         },
-        candidaturas: {
-          select: {
-            id: true,
-            status: true,
-            vaga: { select: { id: true, titulo: true } }
-          }
-        }
       }
     });
 
-    if (!aluno) {
-      return res.status(404).json({ error: "Aluno não encontrado." });
+    if (!alunoFromDb) {
+      return res.status(404).json({ error: "Aluno não encontrado ou o ID não corresponde a um aluno." });
     }
-
-    res.json(formatUserData(aluno));
+    res.status(200).json(formatUserData(alunoFromDb));
   } catch (error) {
-    console.error("Erro ao buscar aluno:", error);
-    res.status(500).json({ error: "Erro interno ao buscar aluno." });
+    console.error("Erro ao buscar aluno por ID:", error);
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2023') {
+      return res.status(400).json({ error: "O ID do aluno fornecido é inválido."});
+    }
+    res.status(500).json({ error: "Erro interno ao buscar detalhes do aluno." });
   }
 };

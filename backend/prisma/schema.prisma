@@ -41,6 +41,9 @@ model User {
   periodo            Int?              // Aplicável principalmente para Aluno
   matricula          String?           @unique // Aplicável principalmente para Aluno
 
+    // --- Configurações do Usuário ---
+  configuracoes      Json?             // Ex: { "tema": "dark", "idioma": "en", "notificacoesEmail": true }
+
   // Relações Aluno
   documentos         Documento[]       @relation("AlunoDocumentos")
   candidaturas       Candidatura[]     @relation("AlunoCandidaturas")

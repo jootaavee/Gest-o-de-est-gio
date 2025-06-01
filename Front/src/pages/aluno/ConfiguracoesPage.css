@@ -1,0 +1,89 @@
+/* frontend/src/pages/aluno/ConfiguracoesPage.css */
+
+.configuracoes-page .card-header h5 {
+  font-weight: 500;
+}
+
+.configuracoes-page .btn-tema.active,
+.configuracoes-page .btn-idioma.active {
+  background-color: var(--bs-primary);
+  color: white;
+  border-color: var(--bs-primary);
+}
+
+body.theme-light {
+  background-color: #f8f9fa;
+  color: #212529;
+}
+body.theme-light .configuracoes-page .card {
+  background-color: #ffffff;
+  border: 1px solid #e9ecef;
+}
+body.theme-light .configuracoes-page .card-header {
+  background-color: #f7f7f9;
+}
+body.theme-light .configuracoes-page .btn-outline-secondary.active {
+    background-color: var(--bs-primary);
+    color: white;
+    border-color: var(--bs-primary);
+}
+
+body.theme-dark {
+  background-color: #212529;
+  color: #dee2e6;
+}
+body.theme-dark .configuracoes-page .card {
+  background-color: #343a40;
+  border-color: #495057;
+  color: #dee2e6;
+}
+body.theme-dark .configuracoes-page .card-header {
+  background-color: #495057;
+  border-bottom: 1px solid #6c757d;
+}
+body.theme-dark .configuracoes-page .text-muted {
+    color: #adb5bd !important;
+}
+body.theme-dark .configuracoes-page .form-check-input {
+    background-color: #495057;
+    border-color: #6c757d;
+}
+body.theme-dark .configuracoes-page .form-check-input:checked {
+    background-color: var(--bs-success);
+    border-color: var(--bs-success);
+}
+body.theme-dark .configuracoes-page hr {
+    border-top-color: #495057;
+}
+body.theme-dark .configuracoes-page .btn-outline-secondary {
+    color: #adb5bd;
+    border-color: #6c757d;
+}
+body.theme-dark .configuracoes-page .btn-outline-secondary:hover {
+    background-color: #495057;
+    color: #f8f9fa;
+}
+body.theme-dark .configuracoes-page .btn-outline-secondary.active {
+    background-color: var(--bs-primary);
+    color: white;
+    border-color: var(--bs-primary);
+}
+
+.form-switch.form-switch-lg {
+    padding-left: 2.8em;
+}
+.form-switch.form-switch-lg .form-check-input {
+  height: 1.5rem;
+  width: calc(2.75rem + 0.75rem);
+  margin-left: -2.8em;
+  border-radius: 1.5rem;
+}
+.form-switch.form-switch-lg .form-check-label {
+  font-size: 1rem;
+  line-height: 1.5rem;
+}
+
+/* Adiciona um pouco de animação suave às mensagens de alerta */
+.animate__animated.animate__fadeIn {
+  --animate-duration: 0.5s;
+}

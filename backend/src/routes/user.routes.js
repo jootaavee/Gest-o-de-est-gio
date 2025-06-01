@@ -1,3 +1,5 @@
+// backend/src/routes/user.routes.js
+
 const express = require("express");
 const userController = require("../controllers/user.controller");
 const authMiddleware = require("../middlewares/auth.middleware");
@@ -6,18 +8,47 @@ const { UserRole } = require("@prisma/client");
 const router = express.Router();
 
 // Rota para buscar o perfil do usuário logado
-router.get("/profile", authMiddleware.authenticateToken, userController.getUserProfile);
+// Acessível por GET /api/usuarios/profile (ou o path base que você usa + /profile)
+router.get(
+    "/profile", 
+    authMiddleware.authenticateToken,
+    userController.getUserProfile // Esta função DEVE retornar o campo 'configuracoes'
+);
 
-// Rota para atualizar o perfil do usuário logado (Aluno ou Técnico)
-router.put("/profile", authMiddleware.authenticateToken, userController.updateUserProfile);
+// Rota para atualizar o perfil principal do usuário logado (Aluno ou Técnico)
+// Acessível por PUT /api/usuarios/profile
+router.put(
+    "/profile", 
+    authMiddleware.authenticateToken,
+    userController.updateUserProfile
+);
 
-// Rota para buscar todos os alunos (acesso restrito ao Técnico)
-router.get("/alunos", authMiddleware.authenticateToken, authMiddleware.authorizeRole(UserRole.TECNICO), userController.getAllAlunos);
+// ROTA PARA ATUALIZAR AS CONFIGURAÇÕES (tema, idioma, etc.) DO USUÁRIO LOGADO
+// Acessível por PUT /api/usuarios/me/configuracoes (conforme o frontend chama)
+router.put(
+    "/me/configuracoes", // Rota específica para as configurações, como o frontend está chamando
+    authMiddleware.authenticateToken,
+    userController.updateUserConfiguracoes 
+);
 
-// Rota para buscar um aluno específico por ID (acesso restrito ao Técnico)
-router.get("/alunos/:id", authMiddleware.authenticateToken, authMiddleware.authorizeRole(UserRole.TECNICO), userController.getAlunoById);
+// --- Rotas de ADMIN/TÉCNICO ---
 
-// Outras rotas relacionadas a usuários (ex: deletar usuário) podem ser adicionadas aqui
+// Rota para buscar todos os alunos
+// Acessível por GET /api/usuarios/alunos
+router.get(
+    "/alunos",
+    authMiddleware.authenticateToken,
+    authMiddleware.authorizeRole(UserRole.TECNICO),
+    userController.getAllAlunos
+);
+
+// Rota para buscar um aluno específico por ID
+// Acessível por GET /api/usuarios/alunos/:id
+router.get(
+    "/alunos/:id",
+    authMiddleware.authenticateToken,
+    authMiddleware.authorizeRole(UserRole.TECNICO),
+    userController.getAlunoById
+);
 
 module.exports = router;
-
