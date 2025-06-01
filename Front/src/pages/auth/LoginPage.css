@@ -1,0 +1,150 @@
+
+.login-container-split {
+  display: flex;
+  min-height: 100vh; 
+}
+
+/* Coluna da esquerda (azul) */
+.login-info-column {
+  background-color: rgb(11, 58, 131); /* Tom de azul escuro (ajuste se necessário) */
+  color: white;
+  padding: 50px;
+  flex: 1; /* Ocupa o espaço disponível */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; 
+}
+
+.login-info-column h1 {
+  font-size: 2.5em;
+  margin-top: 80px;
+  margin-bottom: 80px;
+}
+
+.login-info-column p {
+  font-size: 1em;
+  line-height: 1.8;
+  text-align: justify;
+}
+
+.login-info-footer {
+  font-size: 0.9em;
+  margin-top: 40%; 
+  padding-top: 20px;
+  text-align: center;
+}
+
+/* Coluna da direita (branca com o formulário) */
+.login-form-column {
+  background-color: #ffffff;
+  padding: 40px;
+  flex: 1; /* Ocupa o espaço disponível */
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Centraliza o conteúdo horizontalmente */
+  justify-content: center; /* Centraliza o conteúdo verticalmente */
+}
+
+.login-form-wrapper {
+  max-width: 400px; /* Largura máxima do formulário */
+  width: 100%;
+}
+
+.login-logo {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.login-logo img {
+  max-width: 150px; /* Ajuste o tamanho do logo */
+  height: auto;
+}
+
+.login-form-wrapper h2 {
+  text-align: center;
+  margin-bottom: 25px;
+  color: #333;
+}
+
+/* Estilos para os inputs (baseado na imagem) */
+.login-form-wrapper .form-group label {
+  display: block;
+  margin-bottom: 5px;
+  color: #555;
+}
+
+.login-form-wrapper .form-control {
+  background-color: #f8f9fa; /* Fundo cinza claro */
+  border: 1px solid #ced4da;
+  border-radius: 5px;
+  padding: 10px 15px;
+  margin-bottom: 15px;
+  width: 100%; /* Garante que ocupe a largura */
+  box-sizing: border-box; /* Inclui padding na largura total */
+}
+
+/* Ajustes para checkbox e link "esqueceu senha" */
+.login-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  font-size: 0.9em;
+}
+
+.login-options label {
+  font-weight: normal;
+  color: #666;
+}
+
+.login-options a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+/* Botão primário (Login) */
+.login-form-wrapper .btn-primary {
+  background-color: #007bff; /* Azul */
+  border: none;
+  padding: 12px;
+  width: 100%;
+  border-radius: 5px;
+  color: white;
+  font-size: 1em;
+  cursor: pointer;
+  margin-bottom: 15px;
+}
+
+/* Botão Google */
+.btn-google {
+  background-color: #424242; /* Cinza escuro */
+  color: white;
+  border: none;
+  padding: 12px;
+  width: 100%;
+  border-radius: 5px;
+  font-size: 1em;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.btn-google img { /* Se você usar uma tag img para o logo do Google */
+  margin-right: 10px;
+  height: 18px;
+}
+
+/* Link "Cadastre-se" */
+.login-signup-link {
+  text-align: center;
+  font-size: 0.9em;
+}
+
+.login-signup-link a {
+  color: #007bff;
+  font-weight: bold;
+  text-decoration: none;
+}
+

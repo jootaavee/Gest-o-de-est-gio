@@ -1,0 +1,134 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ALUNO
+  TECNICO
+}
+
+enum DocumentType {
+  CURRICULO
+  TCE // Termo de Compromisso de Estágio
+  TRE // Termo de Realização de Estágio (ou similar, baseado no PDF)
+}
+
+enum CandidaturaStatus {
+  PENDENTE
+  APROVADO
+  REPROVADO
+}
+
+model User {
+  id                 String            @id @default(auto()) @map("_id") @db.ObjectId
+  nome_completo      String
+  numero             String?           // Número de telefone
+  email              String            @unique
+  senha              String            // Será armazenado o hash
+  tipo               UserRole
+  foto_perfil        String?           // URL ou path da foto
+  data_nascimento    DateTime?         @db.Date
+  cpf                String?           @unique
+  curso              String?           // Aplicável principalmente para Aluno
+  periodo            Int?              // Aplicável principalmente para Aluno
+  matricula          String?           @unique // Aplicável principalmente para Aluno
+
+  // Relações Aluno
+  documentos         Documento[]       @relation("AlunoDocumentos")
+  candidaturas       Candidatura[]     @relation("AlunoCandidaturas")
+  notificacoes_recebidas Notificacao[] @relation("DestinatarioNotificacoes")
+
+  // Relações Técnico
+  vagas_criadas      Vaga[]            @relation("TecnicoVagas")
+  notificacoes_enviadas Notificacao[] @relation("RemetenteNotificacoes")
+
+  createdAt          DateTime          @default(now()) // Opcional: data de criação do usuário
+  updatedAt          DateTime          @updatedAt      // Opcional: data da última atualização do usuário
+
+  @@map("users")
+}
+
+model Vaga {
+  id                 String        @id @default(auto()) @map("_id") @db.ObjectId
+  titulo             String
+  descricao          String
+  empresa            String?       // <--- ADICIONADO (Nome da empresa contratante)
+  carga_horaria      Int?          // <--- ADICIONADO (Carga horária semanal, ex: 30 horas)
+  requisitos         String?       // <--- ADICIONADO (Requisitos específicos da vaga, ex: Conhecimentos em...)
+  beneficios         String?       // <--- ADICIONADO (Benefícios oferecidos, ex: Vale Transporte, Vale Refeição)
+  ativa              Boolean       @default(true) // <--- ADICIONADO (Indica se a vaga está ativa para candidaturas)
+  curso_requerido    String?
+  periodo_minimo     Int?
+  local              String?       // Local da vaga (cidade, bairro, remoto)
+  turno              String?       // Ex: manhã, tarde, integral
+  bolsa              String?       // Ex: "R$ 700,00" ou "A combinar"
+  data_abertura      DateTime      // Data de início das inscrições
+  data_encerramento  DateTime      // Data de fim das inscrições
+  imagem             String?       // URL ou path da imagem promocional da vaga
+  link_edital        String?       // URL do edital, se houver
+
+  criado_por_id      String        @db.ObjectId // ID do técnico que criou a vaga
+  criado_por         User          @relation("TecnicoVagas", fields: [criado_por_id], references: [id])
+
+  candidaturas       Candidatura[] @relation("VagaCandidaturas") // Lista de candidaturas para esta vaga
+
+  createdAt          DateTime      @default(now()) // Opcional: data de criação da vaga
+  updatedAt          DateTime      @updatedAt      // Opcional: data da última atualização da vaga
+
+  @@map("vagas") // Mapeia para a coleção "vagas" no MongoDB
+}
+
+model Candidatura {
+  id                String            @id @default(auto()) @map("_id") @db.ObjectId
+  data_candidatura  DateTime          @default(now())
+  status            CandidaturaStatus @default(PENDENTE)
+
+  aluno_id          String            @db.ObjectId
+  aluno             User              @relation("AlunoCandidaturas", fields: [aluno_id], references: [id])
+
+  vaga_id           String            @db.ObjectId
+  vaga              Vaga              @relation("VagaCandidaturas", fields: [vaga_id], references: [id])
+
+  createdAt         DateTime          @default(now()) // Opcional
+  updatedAt         DateTime          @updatedAt      // Opcional
+
+  @@unique([aluno_id, vaga_id]) // Um aluno só pode se candidatar uma vez por vaga
+  @@map("candidaturas")
+}
+
+model Documento {
+  id            String       @id @default(auto()) @map("_id") @db.ObjectId
+  tipo          DocumentType
+  path          String       // Caminho do arquivo no servidor ou URL de armazenamento
+  nome_original String
+  data_upload   DateTime     @default(now())
+
+  aluno_id      String       @db.ObjectId
+  aluno         User         @relation("AlunoDocumentos", fields: [aluno_id], references: [id])
+
+  @@map("documentos")
+}
+
+model Notificacao {
+  id              String    @id @default(auto()) @map("_id") @db.ObjectId
+  titulo          String
+  mensagem        String
+  data_envio      DateTime  @default(now())
+  lida            Boolean   @default(false)
+
+  enviado_por_id  String    @db.ObjectId // ID do Técnico que enviou
+  enviado_por     User      @relation("RemetenteNotificacoes", fields: [enviado_por_id], references: [id])
+
+  destinatario_id String    @db.ObjectId // ID do Aluno que recebeu
+  destinatario    User      @relation("DestinatarioNotificacoes", fields: [destinatario_id], references: [id])
+
+  @@map("notificacoes")
+}
