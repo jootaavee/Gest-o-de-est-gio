@@ -1,56 +1,108 @@
-Sistema de Gerenciamento de Estágios (SGE)
-==========================================
+# Sistema de Gerenciamento de Estágios (SGE)
+> Plataforma web para gerenciamento de vagas de estágio, documentos e acompanhamento de estudantes na UERN.
 
-O SGE (Sistema de Gerenciamento de Estágios) é um sistema web desenvolvido com o objetivo de facilitar e organizar o processo de gerenciamento de estágios no âmbito da Universidade do Estado do Rio Grande do Norte (UERN), com foco nos discentes e na atuação da PRAE (Pró-Reitoria de Assuntos Estudantis).
+[![Build Status][travis-image]][travis-url]
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-Este projeto é parte das atividades da disciplina de Engenharia de Software, com aplicação de práticas ágeis utilizando SCRUM e Integração Contínua.
+O **SGE** é um sistema web desenvolvido para auxiliar a Pró-Reitoria de Assuntos Estudantis (PRAE) da UERN no gerenciamento de vagas de estágio, cadastro de alunos, envio de documentos e acompanhamento de candidaturas. O sistema facilita a comunicação entre estudantes e setor técnico, promovendo organização e eficiência.
 
-Objetivo
---------
+![](header.png) <!-- Você pode substituir por um banner do projeto -->
 
-Desenvolver um sistema que permita:
-- O cadastro e gerenciamento de vagas de estágio.
-- A candidatura de discentes.
-- O acompanhamento do status dos estágios.
-- O gerenciamento de documentos e notificações por parte dos técnicos da PRAE.
+---
 
-Tecnologias utilizadas
-----------------------
+## 📦 Instalação
 
-- Front-end: (ReactJs)
-- Back-end: (Node.js com Prisma)
-- Banco de Dados: (MongoDB)
+### Linux & macOS:
 
-Metodologia
------------
+```sh
+git clone https://github.com/usuario/sge.git
+cd sge
+npm install
+```
 
-O desenvolvimento é guiado pela metodologia SCRUM, com entregas organizadas em sprints. As práticas de Integração Contínua (CI) e Entrega Contínua (CD) são adotadas para garantir qualidade e automação no processo de desenvolvimento.
+### Windows:
 
-Integrantes
------------
+```sh
+git clone https://github.com/usuario/sge.git
+cd sge
+npm install
+```
 
-- Alicia Monteiro
-- Ciro Assuero
-- Kleiton Josivan
-- João Vitor Fernandes
+## 🚀 Exemplo de uso
+
+- Aluno se cadastra e visualiza vagas de estágio disponíveis.
+- PRAE analisa documentos enviados.
+- Candidaturas são organizadas com status e notificações automáticas.
+- Integração futura com sistema acadêmico da UERN (API).
+
+```js
+// Exemplo fictício de requisição para listagem de vagas
+fetch('/api/vagas')
+  .then(res => res.json())
+  .then(data => console.log(data));
+```
+
+> Para mais exemplos e detalhes, acesse o [Wiki][wiki].
+
+---
+
+## ⚙️ Configuração do ambiente de desenvolvimento
+
+1. Instale as dependências:
+```sh
+npm install
+```
+
+2. Execute o ambiente de desenvolvimento:
+```sh
+npm run dev
+```
+
+3. Execute os testes automatizados:
+```sh
+npm run test
+```
+
+---
+
+## 📜 Histórico de Versões
+
+* 0.2.0
+    * ADD: Funcionalidade de candidatura a vagas
+    * ADD: Notificações automáticas
+* 0.1.0
+    * ADD: Cadastro de alunos e vagas
+    * ADD: Upload de documentos
+* 0.0.1
+    * Projeto iniciado
+
+---
+
+## 👨‍🏫 Meta
+
+**Projeto Acadêmico** — _Disciplina_: Engenharia de Software  
+**Professor**: Alysson Oliveira  
+**Discentes**:  
+- Alicia Monteiro  
+- Ciro Assuero  
+- Kleiton Josivan  
+- João Vitor Fernandes  
 - Robert Danilo
 
-Orientação
-----------
+Distribuído sob a licença MIT. Veja [`LICENSE`](LICENSE) para mais detalhes.  
+[Repositório GitHub](https://github.com/usuario/sge)
 
-Prof. Alysson Oliveira  
-Disciplina: Engenharia de Software – DCA/UERN
+---
 
+## 🤝 Contribuindo
 
-Planejamento por Sprints
--------------------------
+1. Faça o fork (<https://github.com/usuario/sge/fork>)
+2. Crie uma branch (`git checkout -b feature/NovaFuncionalidade`)
+3. Commit suas alterações (`git commit -am 'Adiciona nova funcionalidade'`)
+4. Push para a branch (`git push origin feature/NovaFuncionalidade`)
+5. Crie um Pull Request
 
-- Sprint 0: Definição do produto, backlog inicial, visão, CI configurada.
-- Sprint 1: Autenticação (login, cadastro), testes unitários, CI com testes.
-- Sprint 2: Funcionalidades principais do fluxo do usuário, testes de integração, modelo de dados, primeiro deploy para testes.
-
-Licença
--------
-
-Este projeto é de caráter acadêmico e não possui fins lucrativos.  
-Todos os direitos reservados aos autores do projeto e à UERN.
+<!-- Markdown link & img dfn's -->
+[travis-image]: https://img.shields.io/travis/com/github/usuario/sge/main.svg?style=flat-square
+[travis-url]: https://travis-ci.com/github/usuario/sge
+[wiki]: https://github.com/usuario/sge/wiki
