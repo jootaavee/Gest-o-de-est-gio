@@ -9,3 +9,4 @@ node_modules/
 # Se quiser ser explícito para as subpastas também (recomendado):
 Front/.env
 backend/.env
+backend/prisma/seed.js
