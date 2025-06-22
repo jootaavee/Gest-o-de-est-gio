@@ -1,6 +1,6 @@
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faHome, faFileAlt, faUser, faCog, faClipboardList } from '@fortawesome/free-solid-svg-icons';
+import { faHome, faFileAlt, faUser, faCog, faClipboardList, faPaperPlane } from '@fortawesome/free-solid-svg-icons';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -8,7 +8,6 @@ const Sidebar = () => {
   const location = useLocation();
   const { isAluno, isTecnico } = useAuth();
   
-  // Determinar itens do menu com base no tipo de usuário
   const menuItems = isAluno() 
     ? [
         { path: '/', icon: faHome, text: 'Home' },
@@ -21,6 +20,7 @@ const Sidebar = () => {
       ? [
           { path: '/admin', icon: faHome, text: 'Dashboard' },
           { path: '/admin/cadastro-vaga', icon: faFileAlt, text: 'Cadastrar Vaga' },
+          { path: '/admin/notificacoes/cadastrar', icon: faPaperPlane, text: 'Enviar Notificação' },
           { path: '/admin/editar-perfil', icon: faUser, text: 'Editar Perfil' },
         ]
       : [];

@@ -1,0 +1,137 @@
+/* Em: src/components/layout/Header.css */
+
+.header {
+  background-color: #fff;
+  border-bottom: 1px solid #e7e7e7;
+  padding: 0 20px;
+  height: 60px; /* Altura fixa para o header */
+  display: flex;
+  align-items: center;
+}
+
+.header-content {
+  width: 100%;
+  display: flex;
+  justify-content: space-between; /* Alinha itens para os cantos */
+  align-items: center;
+}
+
+.header-title {
+  font-size: 1.1rem;
+  color: #333;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px; /* Espaçamento entre o sino e o menu de usuário */
+}
+
+/* --- ESTILOS DA NOTIFICAÇÃO --- */
+
+.notification-wrapper {
+  position: relative;
+}
+
+.notification-bell {
+  background: none;
+  border: none;
+  color: #555; /* Cor do ícone */
+  font-size: 1.3rem; /* Um pouco maior */
+  cursor: pointer;
+  position: relative;
+  padding: 5px;
+}
+
+.notification-badge {
+  position: absolute;
+  top: -2px;
+  right: -5px;
+  background-color: #d9534f; /* Vermelho para o contador */
+  color: white;
+  border-radius: 50%;
+  padding: 2px 6px;
+  font-size: 0.75rem;
+  font-weight: bold;
+  border: 2px solid white; /* Borda branca para destacar */
+  line-height: 1;
+}
+
+.notification-dropdown {
+  position: absolute;
+  top: calc(100% + 15px); /* Um pouco mais de espaço */
+  right: 0;
+  width: 340px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  border: 1px solid #f0f0f0;
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.dropdown-header {
+  padding: 12px 16px;
+  font-weight: bold;
+  border-bottom: 1px solid #eee;
+}
+
+.dropdown-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.dropdown-item {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.dropdown-item a {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+.dropdown-item:last-child {
+  border-bottom: none;
+}
+.dropdown-item:hover {
+  background-color: #f8f9fa;
+}
+
+.dropdown-item .item-title {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #333;
+    margin-bottom: 4px;
+}
+
+.dropdown-item .item-message {
+    font-size: 0.85rem;
+    color: #666;
+    margin-bottom: 6px;
+    white-space: normal; /* Permite quebra de linha */
+}
+
+.dropdown-item .item-time {
+    font-size: 0.75rem;
+    color: #999;
+}
+
+
+.dropdown-item.empty {
+  text-align: center;
+  color: #888;
+  padding: 20px;
+}
+
+/* --- ESTILOS DO MENU DE USUÁRIO --- */
+.user-menu .user-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #555;
+}

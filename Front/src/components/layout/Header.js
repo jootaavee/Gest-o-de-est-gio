@@ -1,159 +1,97 @@
-import React, { useState, useEffect } from 'react';
+// src/components/layout/Header.js (COMPLETO)
+
+import React, { useState, useEffect, useCallback } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBell, faSignOutAlt } from '@fortawesome/free-solid-svg-icons';
-import { useNavigate } from 'react-router-dom';
-import { useAuth, AuthProvider } from '../../contexts/AuthContext';
+import { faBell, faUserCircle } from '@fortawesome/free-solid-svg-icons';
+import { useAuth } from '../../contexts/AuthContext';
 import apiClient from '../../api/apiClient';
+import './Header.css';
 
 const Header = () => {
   const { user, logout } = useAuth();
-  const navigate = useNavigate();
   const [notificacoes, setNotificacoes] = useState([]);
-  const [naoLidas, setNaoLidas] = useState(0);
-  const [showNotificacoes, setShowNotificacoes] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0); // Estado separado para o contador
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
-  // Buscar notificações do usuário
+  const fetchNotificacoes = useCallback(async () => {
+    try {
+      const response = await apiClient.get('/notificacoes/nao-lidas');
+      // Atualiza tanto a lista visível quanto o contador
+      setNotificacoes(response.data || []);
+      setUnreadCount(response.data?.length || 0);
+    } catch (error) {
+      console.error('Erro ao buscar notificações:', error);
+    }
+  }, []);
+
   useEffect(() => {
-    const fetchNotificacoes = async () => {
-      if (!user) return; // Evita chamar se não houver usuário logado
-      try {
-        const response = await apiClient.get('/notificacoes/usuario/me');
-        setNotificacoes(response.data.notificacoes || []); // Garanta que seja um array
-        setNaoLidas(response.data.nao_lidas || 0);
-      } catch (error) {
-        console.error('Erro ao buscar notificações:', error.response ? error.response.data : error.message);
-      }
-    };
+    fetchNotificacoes();
+    const intervalId = setInterval(fetchNotificacoes, 30000);
+    return () => clearInterval(intervalId);
+  }, [fetchNotificacoes]);
 
-    if (user && user.tipo !== 'TECNICO') { 
-      fetchNotificacoes();
-      const interval = setInterval(fetchNotificacoes, 30000);
-      return () => clearInterval(interval);
-    }
-
-  }, [user]); 
-
-
-
-  // Marcar notificação como lida
-  const marcarComoLida = async (id) => {
-    try {
-      // ----> USE apiClient
-      await apiClient.put(`/notificacoes/usuario/me/${id}/lida`);
-      setNotificacoes(notificacoes.map(notif =>
-        notif._id === id ? { ...notif, lida: true } : notif
-      ));
-      setNaoLidas(prev => (prev > 0 ? prev - 1 : 0));
-    } catch (error) {
-      console.error('Erro ao marcar notificação como lida:', error.response ? error.response.data : error.message);
+  const handleSinoClick = () => {
+    // Apenas alterna a visibilidade do dropdown
+    setDropdownOpen(prev => !prev);
+    
+    // Se o dropdown está sendo aberto e existem notificações não lidas...
+    if (!dropdownOpen && unreadCount > 0) {
+      // Marca como lidas no backend, mas não altera a UI imediatamente
+      apiClient.post('/notificacoes/marcar-como-lidas').catch(err => {
+          console.error("Falha ao marcar como lida:", err);
+      });
+      // Agenda a remoção do contador da UI para daqui a 5 segundos
+      setTimeout(() => {
+        setUnreadCount(0);
+      }, 5000); 
     }
   };
-
-  // Marcar todas como lidas
-  const marcarTodasComoLidas = async () => {
-    try {
-      // ----> USE apiClient
-      await apiClient.put('/notificacoes/usuario/me/marcar-todas-lidas');
-      setNotificacoes(notificacoes.map(notif => ({ ...notif, lida: true })));
-      setNaoLidas(0);
-    } catch (error) {
-      console.error('Erro ao marcar todas notificações como lidas:', error.response ? error.response.data : error.message);
-    }
-  };
-
-  // Função para lidar com o logout
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
-
-  // Obter iniciais do nome do usuário para o avatar
-  const getInitials = () => {
-    if (!user || !user.nome_completo) return '?';
-
-    const names = user.nome_completo.split(' ');
-    if (names.length === 1) return names[0].charAt(0).toUpperCase();
-    return (names[0].charAt(0) + names[names.length - 1].charAt(0)).toUpperCase();
-  };
-
+  
   return (
-    <div className="header">
-      <div className="header-title">
-        {user?.tipo === 'TECNICO' ? 'Painel Administrativo' : 'Sistema de Estágio'}
-      </div>
-      <div className="header-actions">
-        <div className="notification-icon" onClick={() => setShowNotificacoes(!showNotificacoes)}>
-          <FontAwesomeIcon icon={faBell} />
-          {naoLidas > 0 && <span className="notification-badge">{naoLidas}</span>}
+    <header className="header">
+      <div className="header-content">
+        <div className="header-title">Olá, {user?.nome_completo || 'Usuário'}</div>
 
-          {showNotificacoes && (
-            <div className="notification-dropdown">
-              <div className="notification-header">
-                <span>Notificações</span>
-                {notificacoes.length > 0 && naoLidas > 0 && ( // Mostrar botão apenas se houver não lidas
-                  <button
-                    className="btn btn-sm btn-link"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      marcarTodasComoLidas();
-                    }}
-                  >
-                    Marcar todas como lidas
-                  </button>
-                )}
+        <div className="header-actions">
+          <div className="notification-wrapper">
+            <button className="notification-bell" onClick={handleSinoClick}>
+              <FontAwesomeIcon icon={faBell} />
+              {/* O contador agora usa o seu próprio estado */}
+              {unreadCount > 0 && (
+                <span className="notification-badge">{unreadCount}</span>
+              )}
+            </button>
+            {dropdownOpen && (
+              <div className="notification-dropdown">
+                <div className="dropdown-header">Notificações</div>
+                <ul className="dropdown-list">
+                  {/* A lista visível agora usa 'notificacoes', que não é limpa imediatamente */}
+                  {notificacoes.length > 0 ? (
+                    notificacoes.map((notif) => (
+                      <li key={notif.id || notif._id} className="dropdown-item">
+                        <a href={notif.link_url || '#'} target="_blank" rel="noopener noreferrer">
+                            <p className="item-title">{notif.titulo}</p>
+                            <p className="item-message">{notif.mensagem}</p>
+                            <span className="item-time">{new Date(notif.data_envio).toLocaleDateString()}</span>
+                        </a>
+                      </li>
+                    ))
+                  ) : (
+                    <li className="dropdown-item empty">Nenhuma nova notificação</li>
+                  )}
+                </ul>
               </div>
-              <ul className="notification-list">
-                {notificacoes.length === 0 ? (
-                  <li className="notification-item">
-                    <div className="notification-message">Nenhuma notificação</div>
-                  </li>
-                ) : (
-                  notificacoes.map(notif => (
-                    <li
-                      key={notif._id}
-                      className={`notification-item ${!notif.lida ? 'unread' : ''}`}
-                      onClick={(e) => {
-                        e.stopPropagation(); // Para não fechar o dropdown imediatamente se ele fechar no click do container pai
-                        if (!notif.lida) { // Marcar como lida apenas se não estiver lida
-                          marcarComoLida(notif._id);
-                        }
-                        // Você pode querer adicionar navegação aqui, por exemplo:
-                        // if (notif.link) navigate(notif.link);
-                        // setShowNotificacoes(false); // Opcional: fechar dropdown após click
-                      }}
-                    >
-                      <div className="notification-title">{notif.titulo}</div>
-                      <div className="notification-message">{notif.mensagem}</div>
-                      <div className="notification-time">
-                        {new Date(notif.data_criacao).toLocaleString()}
-                      </div>
-                    </li>
-                  ))
-                )}
-              </ul>
-            </div>
-          )}
-        </div>
-
-        <div className="user-profile">
-          <div className="user-avatar">
-            {user?.foto_perfil_url ? (
-              <img src={user.foto_perfil_url} alt={user.nome_completo} />
-            ) : (
-              getInitials()
             )}
           </div>
-          <span>{user?.nome_completo}</span>
-          <button
-            className="btn btn-link"
-            onClick={handleLogout}
-            title="Sair"
-          >
-            <FontAwesomeIcon icon={faSignOutAlt} />
-          </button>
+          
+          <div className="user-menu">
+            <button className="user-button">
+              <FontAwesomeIcon icon={faUserCircle} size="lg" />
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </header>
   );
 };
 
