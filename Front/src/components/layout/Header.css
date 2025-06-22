@@ -1,10 +1,10 @@
-/* Em: src/components/layout/Header.css */
+/* Em: src/components/layout/Header.css (Estilos originais + novos estilos combinados) */
 
 .header {
   background-color: #fff;
   border-bottom: 1px solid #e7e7e7;
   padding: 0 20px;
-  height: 60px; /* Altura fixa para o header */
+  height: 60px;
   display: flex;
   align-items: center;
 }
@@ -12,7 +12,7 @@
 .header-content {
   width: 100%;
   display: flex;
-  justify-content: space-between; /* Alinha itens para os cantos */
+  justify-content: space-between;
   align-items: center;
 }
 
@@ -24,7 +24,7 @@
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 20px; /* Espaçamento entre o sino e o menu de usuário */
+  gap: 20px;
 }
 
 /* --- ESTILOS DA NOTIFICAÇÃO --- */
@@ -36,8 +36,8 @@
 .notification-bell {
   background: none;
   border: none;
-  color: #555; /* Cor do ícone */
-  font-size: 1.3rem; /* Um pouco maior */
+  color: #555;
+  font-size: 1.3rem;
   cursor: pointer;
   position: relative;
   padding: 5px;
@@ -47,19 +47,19 @@
   position: absolute;
   top: -2px;
   right: -5px;
-  background-color: #d9534f; /* Vermelho para o contador */
+  background-color: #d9534f;
   color: white;
   border-radius: 50%;
   padding: 2px 6px;
   font-size: 0.75rem;
   font-weight: bold;
-  border: 2px solid white; /* Borda branca para destacar */
+  border: 2px solid white;
   line-height: 1;
 }
 
 .notification-dropdown {
   position: absolute;
-  top: calc(100% + 15px); /* Um pouco mais de espaço */
+  top: calc(100% + 15px);
   right: 0;
   width: 340px;
   background-color: white;
@@ -87,6 +87,9 @@
 .dropdown-item {
   padding: 12px 16px;
   border-bottom: 1px solid #f0f0f0;
+  /* MODIFICAÇÕES ABAIXO PARA SUPORTAR O BOTÃO 'X' */
+  position: relative; /* Essencial para posicionar o botão 'x' dentro */
+  padding-right: 35px; /* Adiciona espaço para o botão não sobrepor o texto */
 }
 
 .dropdown-item a {
@@ -113,7 +116,7 @@
     font-size: 0.85rem;
     color: #666;
     margin-bottom: 6px;
-    white-space: normal; /* Permite quebra de linha */
+    white-space: normal;
 }
 
 .dropdown-item .item-time {
@@ -128,10 +131,52 @@
   padding: 20px;
 }
 
+/* ADICIONADO: ESTILO PARA O BOTÃO 'X' DE DISPENSAR */
+.close-notification-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: #aaa;
+  cursor: pointer;
+  padding: 0;
+  z-index: 2; /* Garante que fique acima de outros elementos */
+}
+
+.close-notification-btn:hover {
+  color: #333;
+}
+
+
 /* --- ESTILOS DO MENU DE USUÁRIO --- */
 .user-menu .user-button {
   background: none;
   border: none;
   cursor: pointer;
   color: #555;
+}
+
+
+/* --- ESTILOS DO TEMA ESCURO --- */
+
+/* Notificações já lidas (seu estilo original) */
+.dropdown-item.lida {
+  background-color: #f7f7f7;
+  opacity: 0.8; 
+}
+
+.theme-dark .dropdown-item.lida {
+    background-color: #2a2a2e; 
+}
+
+/* ADICIONADO: Estilo para o botão 'x' no tema escuro */
+.theme-dark .close-notification-btn {
+  color: #666;
+}
+
+.theme-dark .close-notification-btn:hover {
+  color: #fff;
 }

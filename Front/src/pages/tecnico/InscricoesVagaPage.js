@@ -1,22 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
-import apiClient from '../../api/apiClient'; // Importar o cliente API
+import { useParams, useNavigate } from 'react-router-dom';
+import apiClient from '../../api/apiClient';
 import { useAuth } from '../../contexts/AuthContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSpinner, faUserCheck, faUserTimes, faFilePdf, faDownload, faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+import { faSpinner, faUserCheck, faUserTimes, faFilePdf, faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 
 const InscricoesVagaPage = () => {
-  const { id: vagaId } = useParams(); // ID da vaga
+  const { id: vagaId } = useParams();
   const navigate = useNavigate();
-  const { user, isTecnico, loading: authLoading } = useAuth();
+  const { isTecnico, loading: authLoading } = useAuth();
 
   const [vaga, setVaga] = useState(null);
   const [candidaturas, setCandidaturas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [updatingStatus, setUpdatingStatus] = useState({}); // Para rastrear o loading de cada botão
+  const [updatingStatus, setUpdatingStatus] = useState({});
 
-  // Busca detalhes da vaga e as candidaturas associadas
   useEffect(() => {
     const fetchData = async () => {
       if (!isTecnico()) {
@@ -27,11 +26,9 @@ const InscricoesVagaPage = () => {
       setLoading(true);
       setError('');
       try {
-        // Buscar detalhes da vaga (para exibir o título, por exemplo)
         const vagaResponse = await apiClient.get(`/vagas/${vagaId}`);
         setVaga(vagaResponse.data);
 
-        // Buscar candidaturas da vaga
         const candidaturasResponse = await apiClient.get(`/vagas/${vagaId}/candidaturas`);
         setCandidaturas(candidaturasResponse.data);
 
@@ -48,27 +45,23 @@ const InscricoesVagaPage = () => {
     }
   }, [vagaId, isTecnico, authLoading]);
 
-  // Função para atualizar o status de uma candidatura
   const handleUpdateStatus = async (candidaturaId, novoStatus) => {
-    setUpdatingStatus(prev => ({ ...prev, [candidaturaId]: true })); // Inicia loading para este botão
+    setUpdatingStatus(prev => ({ ...prev, [candidaturaId]: true }));
     setError('');
     try {
       const response = await apiClient.patch(`/candidaturas/${candidaturaId}/status`, { status: novoStatus });
-      // Atualiza o status na lista local
       setCandidaturas(prev => 
         prev.map(c => c.id === candidaturaId ? { ...c, status: response.data.status } : c)
       );
-      // Poderia adicionar uma notificação de sucesso aqui
     } catch (err) {
-      console.error('Erro ao atualizar status da candidatura:', err.response ? err.response.data : err.message);
-      setError(err.response?.data?.error || 'Erro ao atualizar status.');
-      alert(err.response?.data?.error || 'Erro ao atualizar status.'); // Mostra erro
+      const errorMessage = err.response?.data?.error || 'Erro ao atualizar status.';
+      setError(errorMessage);
+      alert(errorMessage);
     } finally {
-      setUpdatingStatus(prev => ({ ...prev, [candidaturaId]: false })); // Finaliza loading
+      setUpdatingStatus(prev => ({ ...prev, [candidaturaId]: false }));
     }
   };
 
-  // Formatar data
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     try {
@@ -103,7 +96,7 @@ const InscricoesVagaPage = () => {
     <div className="container my-4">
        <button 
         className="btn btn-outline-secondary mb-3"
-        onClick={() => navigate('/admin')} // Volta para a lista de vagas do admin
+        onClick={() => navigate('/admin')}
       >
         <FontAwesomeIcon icon={faArrowLeft} className="me-2" />
         Voltar para Vagas
@@ -135,12 +128,11 @@ const InscricoesVagaPage = () => {
                   <td>{c.aluno?.email || 'N/A'}</td>
                   <td>{formatDate(c.data_inscricao)}</td>
                   <td>
-                     <span className={`badge bg-${c.status === 'APROVADO' ? 'success' : c.status === 'REJEITADO' ? 'danger' : 'warning'}`}>
-                         {c.status || 'Pendente'}
+                     <span className={`badge bg-${c.status === 'APROVADO' ? 'success' : c.status === 'REPROVADO' ? 'danger' : 'warning'}`}>
+                         {c.status}
                      </span>
                   </td>
                   <td>
-                    {/* Assumindo que a API retorna o currículo junto ou um link */}
                     {c.aluno?.curriculoUrl ? (
                       <a href={c.aluno.curriculoUrl} target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-outline-secondary">
                         <FontAwesomeIcon icon={faFilePdf} className="me-1" /> Ver
@@ -149,26 +141,40 @@ const InscricoesVagaPage = () => {
                       <span className="text-muted">N/D</span>
                     )}
                   </td>
+                  {/* --- LÓGICA DE AÇÕES ATUALIZADA --- */}
                   <td>
-                    {/* Botões para aprovar/rejeitar */}
-                    <button 
-                      className="btn btn-sm btn-success me-1"
-                      onClick={() => handleUpdateStatus(c.id, 'APROVADO')} // Status a ser enviado para a API
-                      disabled={updatingStatus[c.id] || c.status === 'APROVADO'}
-                      title="Aprovar Candidatura"
-                    >
-                      {updatingStatus[c.id] ? <FontAwesomeIcon icon={faSpinner} spin /> : <FontAwesomeIcon icon={faUserCheck} />}
-                    </button>
-                    <button 
-                      className="btn btn-sm btn-danger"
-                      onClick={() => handleUpdateStatus(c.id, 'REJEITADO')} // Status a ser enviado para a API
-                      disabled={updatingStatus[c.id] || c.status === 'REJEITADO'}
-                      title="Rejeitar Candidatura"
-                    >
-                       {updatingStatus[c.id] ? <FontAwesomeIcon icon={faSpinner} spin /> : <FontAwesomeIcon icon={faUserTimes} />}
-                    </button>
-                    {/* Adicionar link para perfil do aluno se necessário */}
-                    {/* <Link to={`/admin/aluno/${c.aluno?.id}`} className="btn btn-sm btn-outline-info ms-1">Perfil</Link> */}
+                    {c.status === 'APROVADO' && (
+                      <button className="btn btn-sm btn-success" disabled title="Aprovado">
+                        <FontAwesomeIcon icon={faUserCheck} />
+                      </button>
+                    )}
+
+                    {c.status === 'REPROVADO' && (
+                      <button className="btn btn-sm btn-danger" disabled title="Reprovado">
+                        <FontAwesomeIcon icon={faUserTimes} />
+                      </button>
+                    )}
+
+                    {c.status === 'PENDENTE' && (
+                      <>
+                        <button 
+                          className="btn btn-sm btn-success me-1"
+                          onClick={() => handleUpdateStatus(c.id, 'APROVADO')}
+                          disabled={updatingStatus[c.id]}
+                          title="Aprovar Candidatura"
+                        >
+                          {updatingStatus[c.id] ? <FontAwesomeIcon icon={faSpinner} spin /> : <FontAwesomeIcon icon={faUserCheck} />}
+                        </button>
+                        <button 
+                          className="btn btn-sm btn-danger"
+                          onClick={() => handleUpdateStatus(c.id, 'REPROVADO')}
+                          disabled={updatingStatus[c.id]}
+                          title="Reprovar Candidatura"
+                        >
+                          {updatingStatus[c.id] ? <FontAwesomeIcon icon={faSpinner} spin /> : <FontAwesomeIcon icon={faUserTimes} />}
+                        </button>
+                      </>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -181,4 +187,3 @@ const InscricoesVagaPage = () => {
 };
 
 export default InscricoesVagaPage;
-

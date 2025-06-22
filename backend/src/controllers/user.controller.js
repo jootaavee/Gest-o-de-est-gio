@@ -4,10 +4,9 @@ const prisma = require("../prismaClient");
 const bcrypt = require("bcrypt");
 const { UserRole, Prisma } = require("@prisma/client");
 
-// Configurações padrão reutilizáveis
+// Configurações padrão reutilizáveis (SEM IDIOMA)
 const defaultUserConfigurations = {
   tema: 'light',
-  idioma: 'pt-br',
   notificacoesEmail: true,
 };
 
@@ -15,6 +14,7 @@ const defaultUserConfigurations = {
 const formatUserData = (userFromDb) => {
   if (!userFromDb) return null;
 
+  // Garante que o objeto de configurações sempre exista com os padrões corretos
   const effectiveConfiguracoes = {
     ...defaultUserConfigurations,
     ...(typeof userFromDb.configuracoes === 'object' && userFromDb.configuracoes !== null 
@@ -23,7 +23,7 @@ const formatUserData = (userFromDb) => {
   };
 
   const userToSend = { ...userFromDb };
-  delete userToSend.senha;
+  delete userToSend.senha; // Nunca envie a senha
   userToSend.numero = userFromDb.numero || null;
   userToSend.data_nascimento = userFromDb.data_nascimento
     ? new Date(userFromDb.data_nascimento).toISOString().split("T")[0]
@@ -44,9 +44,7 @@ exports.getUserProfile = async (req, res) => {
         foto_perfil: true, data_nascimento: true, cpf: true, curso: true,
         periodo: true, matricula: true, configuracoes: true, // Inclui configurações
         documentos: {
-          select: {
-            id: true, tipo: true, nome_original: true, path: true, data_upload: true
-          },
+          select: { id: true, tipo: true, nome_original: true, path: true, data_upload: true },
           orderBy: { data_upload: 'desc' }
         }
       }
@@ -107,7 +105,7 @@ exports.updateUserProfile = async (req, res) => {
       dataToUpdate.senha = await bcrypt.hash(nova_senha, salt);
     }
 
-    if (Object.keys(dataToUpdate).length === 0) { // Não confunda com 'senha', que já é tratada.
+    if (Object.keys(dataToUpdate).length === 0) {
         return res.status(400).json({ error: "Nenhum dado fornecido para atualização do perfil."});
     }
 
@@ -130,7 +128,7 @@ exports.updateUserProfile = async (req, res) => {
     console.error("Erro ao atualizar perfil:", error);
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === 'P2002') {
-        const targetField = error.meta?.target?.[0] || error.meta?.target; // Prisma >4.0.0
+        const targetField = error.meta?.target?.[0] || 'Campo';
         return res.status(400).json({ error: `O campo '${Array.isArray(targetField) ? targetField.join(', ') : targetField}' já está em uso.` });
       }
       if (error.code === 'P2025') {
@@ -141,27 +139,23 @@ exports.updateUserProfile = async (req, res) => {
   }
 };
 
-// 3. Atualizar CONFIGURAÇÕES do usuário logado
+// 3. Atualizar CONFIGURAÇÕES do usuário logado (VERSÃO SIMPLIFICADA SEM IDIOMA)
 exports.updateUserConfiguracoes = async (req, res) => {
   const userId = req.user.id;
-  const { tema, idioma, notificacoesEmail } = req.body;
+  const { tema, notificacoesEmail } = req.body;
 
-  if (tema === undefined || idioma === undefined || notificacoesEmail === undefined) {
-    return res.status(400).json({ error: "Todos os campos de configuração (tema, idioma, notificacoesEmail) são obrigatórios." });
+  if (tema === undefined || notificacoesEmail === undefined) {
+    return res.status(400).json({ error: "Os campos de configuração (tema, notificacoesEmail) são obrigatórios." });
   }
   const validTemas = ['light', 'dark', 'system'];
   if (!validTemas.includes(tema)) {
     return res.status(400).json({ error: `Tema inválido. Valores permitidos: ${validTemas.join(', ')}.` });
   }
-  const validIdiomas = ['pt-br', 'en'];
-  if (!validIdiomas.includes(idioma)) {
-    return res.status(400).json({ error: `Idioma inválido. Valores permitidos: ${validIdiomas.join(', ')}.` });
-  }
   if (typeof notificacoesEmail !== 'boolean') {
     return res.status(400).json({ error: "O campo 'notificacoesEmail' deve ser um valor booleano (true ou false)." });
   }
 
-  const novasConfiguracoes = { tema, idioma, notificacoesEmail };
+  const novasConfiguracoes = { tema, notificacoesEmail };
 
   try {
     const updatedUser = await prisma.user.update({

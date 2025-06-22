@@ -1,118 +1,151 @@
-// backend/src/controllers/notificacao.controller.js
-
 const prisma = require("../prismaClient");
-const { UserRole } = require("@prisma/client");
 
-// Sua função sendNotificacao (MANTIDA - SEM ALTERAÇÕES)
 exports.sendNotificacao = async (req, res) => {
-  const tecnicoId = req.user.id;
-  const { destinatario_matricula, titulo, mensagem } = req.body;
-  if (!destinatario_matricula || !titulo || !mensagem) {
-    return res.status(400).json({ error: "Matrícula do destinatário, título e mensagem são obrigatórios." });
+  const { tipo_destinatario, valor_destinatario, titulo, mensagem } = req.body;
+  const enviadoPorId = req.user.id;
+
+  if (!tipo_destinatario || !titulo || !mensagem) {
+    return res.status(400).json({ error: "Tipo de destinatário, título e mensagem são obrigatórios." });
   }
+
+  let destinatariosIds = [];
+
   try {
-    const destinatario = await prisma.user.findUnique({ where: { matricula: destinatario_matricula } });
-    if (!destinatario || destinatario.tipo !== UserRole.ALUNO) {
-      return res.status(404).json({ error: "Aluno com a matrícula informada não foi encontrado." });
+    switch (tipo_destinatario.toUpperCase()) {
+      case 'TODOS':
+        const todosAlunos = await prisma.user.findMany({ where: { tipo: 'ALUNO' }, select: { id: true } });
+        destinatariosIds = todosAlunos.map(aluno => aluno.id);
+        break;
+      case 'CURSO':
+        if (!valor_destinatario) {
+          return res.status(400).json({ error: "O nome do curso é obrigatório para este tipo de envio." });
+        }
+        const alunosPorCurso = await prisma.user.findMany({ 
+            where: { tipo: 'ALUNO', curso: valor_destinatario }, 
+            select: { id: true } 
+        });
+        destinatariosIds = alunosPorCurso.map(aluno => aluno.id);
+        break;
+      case 'MATRICULA':
+        if (!valor_destinatario) {
+          return res.status(400).json({ error: "A matrícula do aluno é obrigatória para este tipo de envio." });
+        }
+        const alunoPorMatricula = await prisma.user.findUnique({ where: { matricula: valor_destinatario } });
+        if (!alunoPorMatricula) {
+            return res.status(404).json({ error: `Aluno com matrícula ${valor_destinatario} não encontrado.` });
+        }
+        destinatariosIds.push(alunoPorMatricula.id);
+        break;
+      default:
+        return res.status(400).json({ error: "Tipo de destinatário inválido. Valores permitidos: TODOS, CURSO, MATRICULA." });
     }
-    const novaNotificacao = await prisma.notificacao.create({
-      data: {
-        titulo,
-        mensagem,
-        lida: false,
-        enviado_por_id: tecnicoId,
-        destinatario_id: destinatario.id,
-      },
+
+    if (destinatariosIds.length === 0) {
+      return res.status(404).json({ error: "Nenhum aluno destinatário foi encontrado para os critérios fornecidos." });
+    }
+    
+    const notificacoesParaCriar = destinatariosIds.map(destinatarioId => ({
+      titulo,
+      mensagem,
+      enviado_por_id: enviadoPorId,
+      destinatario_id: destinatarioId,
+    }));
+    
+    await prisma.notificacao.createMany({
+      data: notificacoesParaCriar
     });
-    res.status(201).json({ message: "Notificação enviada com sucesso!", notificacao: novaNotificacao });
+    
+    res.status(200).json({ message: `Notificação enviada com sucesso para ${destinatariosIds.length} aluno(s)!` });
+
   } catch (error) {
-    console.error("ERRO DETALHADO AO ENVIAR NOTIFICAÇÃO:", error);
-    res.status(500).json({ error: "Erro interno do servidor ao processar a notificação." });
+    console.error("Erro ao enviar notificação:", error);
+    res.status(500).json({ error: "Ocorreu um erro interno no servidor ao tentar enviar a notificação." });
   }
 };
 
-
-// Sua função getMinhasNotificacoes (MANTIDA - SEM ALTERAÇÕES)
 exports.getMinhasNotificacoes = async (req, res) => {
-  const alunoId = req.user.id;
-  try {
-    const notificacoes = await prisma.notificacao.findMany({
-      where: { destinatario_id: alunoId },
-      orderBy: { data_envio: "desc" },
-      include: { enviado_por: { select: { nome_completo: true } } }
-    });
-    res.json(notificacoes);
-  } catch (error) {
-    res.status(500).json({ error: "Erro interno ao buscar notificações." });
-  }
+    const alunoId = req.user.id;
+    try {
+        const notificacoes = await prisma.notificacao.findMany({
+            where: { destinatario_id: alunoId },
+            orderBy: { data_envio: "desc" },
+            include: { enviado_por: { select: { nome_completo: true } } }
+        });
+        res.json(notificacoes);
+    } catch (error) {
+        res.status(500).json({ error: "Erro interno ao buscar notificações." });
+    }
 };
 
-// Sua função markAsRead (MANTIDA - SEM ALTERAÇÕES)
 exports.markAsRead = async (req, res) => {
-  const alunoId = req.user.id;
-  const { id } = req.params;
-  try {
-    const updated = await prisma.notificacao.updateMany({
-      where: { id: id, destinatario_id: alunoId },
-      data: { lida: true },
-    });
-    if (updated.count === 0) {
-      return res.status(404).json({ error: "Notificação não encontrada ou não pertence a você." });
+    const alunoId = req.user.id;
+    const { id } = req.params;
+    try {
+        const updated = await prisma.notificacao.updateMany({
+            where: { id: id, destinatario_id: alunoId },
+            data: { lida: true },
+        });
+        if (updated.count === 0) {
+            return res.status(404).json({ error: "Notificação não encontrada ou não pertence a você." });
+        }
+        res.json({ message: "Notificação marcada como lida." });
+    } catch (error) {
+        res.status(500).json({ error: "Erro interno ao atualizar notificação." });
     }
-    res.json({ message: "Notificação marcada como lida." });
-  } catch (error) {
-    res.status(500).json({ error: "Erro interno ao atualizar notificação." });
-  }
 };
 
-// ==========================================================
-// FUNÇÃO CORRIGIDA COM AJUSTE NA CONSULTA (WHERE)
-// ==========================================================
 exports.listarNaoLidas = async (req, res) => {
-  const userId = req.user.id;
-  console.log(`[DEBUG] Tentando buscar para User ID: ${userId}`);
-
-  try {
-    const notificacoes = await prisma.notificacao.findMany({
-      where: {
-        // CORREÇÃO: Usando 'equals' para garantir a correspondência exata do ObjectId
-        destinatario_id: {
-          equals: userId,
-        },
-        lida: false,
-      },
-      orderBy: { data_envio: 'desc' },
-      take: 10,
-    });
-    
-    console.log(`[DEBUG] Prisma encontrou ${notificacoes.length} notificações com 'equals'.`);
-    if (notificacoes.length > 0) {
-        console.log('[DEBUG] Detalhes:', JSON.stringify(notificacoes, null, 2));
+    const userId = req.user.id;
+    try {
+        const notificacoes = await prisma.notificacao.findMany({
+            where: {
+                destinatario_id: { equals: userId },
+                lida: false,
+            },
+            orderBy: { data_envio: 'desc' },
+            take: 10,
+        });
+        res.status(200).json(notificacoes);
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao buscar notificações não lidas.' });
     }
-    
-    res.status(200).json(notificacoes);
-  } catch (error) {
-    console.error('[ERRO] Falha ao buscar notificações não lidas:', error);
-    res.status(500).json({ error: 'Erro ao buscar notificações não lidas.' });
-  }
 };
 
-
-// Sua função marcarTodasComoLidas (com o mesmo ajuste por segurança)
 exports.marcarTodasComoLidas = async (req, res) => {
-  const userId = req.user.id;
-  try {
-    await prisma.notificacao.updateMany({
-      where: {
-        destinatario_id: {
-          equals: userId, // Aplicando a mesma correção aqui
-        },
-        lida: false,
-      },
-      data: { lida: true },
-    });
-    res.status(200).json({ message: 'Notificações marcadas como lidas.' });
-  } catch (error) {
-    res.status(500).json({ error: 'Erro ao atualizar notificações.' });
-  }
+    const userId = req.user.id;
+    try {
+        await prisma.notificacao.updateMany({
+            where: {
+                destinatario_id: { equals: userId },
+                lida: false,
+            },
+            data: { lida: true },
+        });
+        res.status(200).json({ message: 'Notificações marcadas como lidas.' });
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao atualizar notificações.' });
+    }
+};
+
+exports.deleteNotificacao = async (req, res) => {
+    const userId = req.user.id;
+    const { id: notificacaoId } = req.params;
+
+    try {
+        const deleteResult = await prisma.notificacao.deleteMany({
+            where: {
+                id: notificacaoId,
+                destinatario_id: userId,
+            },
+        });
+
+        if (deleteResult.count === 0) {
+            return res.status(404).json({ error: "Notificação não encontrada ou você não tem permissão para deletá-la." });
+        }
+
+        res.status(200).json({ message: "Notificação deletada com sucesso." });
+    } catch (error) {
+        console.error("Erro ao deletar notificação:", error);
+        res.status(500).json({ error: "Erro interno ao tentar deletar a notificação." });
+    }
 };

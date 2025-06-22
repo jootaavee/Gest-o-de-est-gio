@@ -61,12 +61,11 @@ const AdminEditarPerfilPage = () => {
     };
 
     try {
-      // A rota no backend é PUT /api/users/profile ou /api/usuarios/profile
       const response = await apiClient.put('/users/profile', dataParaEnviar);
 
       console.log("FRONTEND - Resposta da API ao atualizar perfil (Técnico):", JSON.stringify(response.data, null, 2)); // DEBUG
 
-      if (response.data && response.data.user && response.data.user.tipo) { // Verifica se 'user' e 'user.tipo' existem
+      if (response.data && response.data.user && response.data.user.tipo) { 
         // ** CORREÇÃO PRINCIPAL AQUI **
         setUser(response.data.user); 
         localStorage.setItem('user', JSON.stringify(response.data.user)); 
@@ -104,7 +103,6 @@ const AdminEditarPerfilPage = () => {
      );
   }
   
-  // Adicionalmente, verifica se 'user' existe, caso 'isTecnico' seja true mas 'user' seja null por algum motivo
   if (!user) {
     return (
         <div className="container my-5">
@@ -145,17 +143,8 @@ const AdminEditarPerfilPage = () => {
                 value={formData.numero} onChange={handleChange} placeholder="(00) 00000-0000" disabled={loading}/>
             </div>
             
-            {/* Adicione aqui outros campos específicos para o perfil do técnico que podem ser editados */}
-            {/* 
-            <div className="mb-3">
-              <label htmlFor="departamento" className="form-label">Departamento</label>
-              <input type="text" className="form-control" id="departamento" name="departamento" value={formData.departamento} onChange={handleChange} disabled={loading} />
-            </div> 
-            */}
           </div>
         </div>
-
-        {/* Adicionar seção para mudar senha aqui, se desejar */}
 
         <div className="mt-4 d-flex justify-content-end">
           <button type="button" className="btn btn-outline-secondary me-2"
