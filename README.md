@@ -1,3 +1,6 @@
+<h1 align="center">
+  <img src="Docs/Logo.png" alt="Logo" width="150"/>
+</h1>
 
 # Sistema de Gerenciamento de Estágios (SGE)
 
@@ -63,3 +66,14 @@ Disciplina: Engenharia de Software
 📁 docs/                 → Documentação geral (Visão, Requisitos, Diagramas)
 📖 Manual do usuário     → Guia de instalação, configuração e utilização do sistema
 📄 README.md             → Este documento (descrição geral do projeto)
+```
+---
+
+## 🗣️ Branch de desenvolvimento 
+
+> **ATENÇÃO:** O projeto está sendo desenvolvido na branch principal de desenvolvimento:[`dev`](https://github.com/jootaavee/Gest-o-de-est-gio/tree/dev)  
+> Para acompanhar as últimas atualizações, utilize essa branch.
+
+---
+
+
