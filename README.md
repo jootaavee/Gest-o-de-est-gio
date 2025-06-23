@@ -45,11 +45,11 @@ O desenvolvimento é guiado pela metodologia **SCRUM**, com entregas organizadas
 
 ## Integrantes
 
-- **Alicia Monteiro**
-- **Ciro Assuero**
-- **Kleiton Josivan**
-- **João Vitor Fernandes**
-- **Robert Danilo**
+- **Alicia Monteiro** – Product Owner (PO)
+- **Robert Danilo** – Scrum Master (SM)
+- **Ciro Assuero** – Desenvolvedor (Dev)
+- **Kleiton Josivan** – Desenvolvedor (Dev)
+- **João Vitor Fernandes** – Desenvolvedor (Dev)
 
 ---
 
