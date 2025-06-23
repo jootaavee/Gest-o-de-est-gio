@@ -22,9 +22,9 @@ Desenvolver um sistema que permita:
 
 ## Tecnologias utilizadas
 
-- **Front-end**: (ReactJS)
-- **Back-end**: (Node.js com Prisma)
-- **Banco de Dados**: (MongoDB)
+- <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/react/react-original.svg" width="25"/> **Front-end:** ReactJS
+- <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nodejs/nodejs-original.svg" width="25"/> **Back-end:** Node.js com Prisma
+- <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mongodb/mongodb-original.svg" width="25"/> **Banco de Dados:** MongoDB
 
 ---
 
@@ -62,4 +62,4 @@ Disciplina: Engenharia de Software
 ```plaintext
 📁 docs/                 → Documentação geral (Visão, Requisitos, Diagramas)
 📖 Manual do usuário     → Guia de instalação, configuração e utilização do sistema
-📄 README.md             →  Este documento (descrição geral do projeto)
+📄 README.md             → Este documento (descrição geral do projeto)
