@@ -60,5 +60,6 @@ Disciplina: Engenharia de Software
 ## Organização do projeto
 
 ```plaintext
-📁 docs/                 → Documentação (Visão, Requisitos, Diagramas)
-📄 README.md             → Este documento
+📁 docs/                 → Documentação geral (Visão, Requisitos, Diagramas)
+📖 Manual do usuário     → Guia de instalação, configuração e utilização do sistema
+📄 README.md             →  Este documento (descrição geral do projeto)
