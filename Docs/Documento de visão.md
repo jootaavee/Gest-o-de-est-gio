@@ -36,8 +36,7 @@ Um sistema web centralizado, intuitivo e automatizado que permita a gestão comp
 **PARA** alunos, coordenadores de estágio da instituição, empresas parceiras e orientadores,  
 **QUE** necessitam de um processo eficiente, transparente e centralizado para gerenciar estágios,  
 
-**O Sistema de Gerenciamento de Estágio (SGE)**  
-**É UMA** plataforma web  
+**O Sistema de Gerenciamento de Estágio (SGE)** **É UMA** plataforma web  
 **QUE** permite o cadastro de vagas, candidaturas, gerenciamento de documentos, acompanhamento e avaliação de estágios, facilitando a comunicação entre todas as partes.  
 **DIFERENTE DE** processos manuais baseados em e-mail e planilhas, ou sistemas genéricos não especializados,  
 **NOSSO PRODUTO** oferece uma solução completa e integrada, focada nas necessidades específicas do ecossistema de estágios, com interface intuitiva e fluxos otimizados.
@@ -53,6 +52,28 @@ Um sistema web centralizado, intuitivo e automatizado que permita a gestão comp
 | **Orientadores Acadêmicos**| Acompanhamento pedagógico | Orientar alunos, aprovar planos, avaliar relatórios e desempenho            | Média      |
 | **Supervisores (Empresa)**| Acompanhamento na empresa | Acompanhar estagiários, definir atividades, avaliar desempenho              | Média      |
 | **Equipe de Desenvolvimento** | Construtores do sistema | Compreender requisitos, entregar uma solução robusta e de qualidade         | Alta       |
+
+# 5. Backlogs do produto 
+
+| ID  | Funcionalidade                  | História de Usuário                                                                                      | Prioridade |
+|-----|---------------------------------|-----------------------------------------------------------------------------------------------------------|------------|
+| 01  | Autenticação e acesso           | Como discente, desejo me cadastrar e fazer login, para acessar o sistema de estágios.                    | Alta       |
+| 02  | Autenticação e acesso           | Como técnico da PRAE, desejo acessar o sistema, para gerenciar os dados dos estágios.                    | Alta       |
+| 03  | Gerenciamento de vagas          | Como técnico da PRAE, desejo cadastrar vagas de estágio, para que os discentes possam se candidatar.     | Alta       |
+| 04  | Gerenciamento de vagas          | Como discente, desejo visualizar vagas disponíveis, para escolher a que mais se encaixa no meu perfil.   | Alta       |
+| 05  | Gerenciamento de vagas          | Como discente, desejo me candidatar a uma vaga, para participar do processo de estágio.                  | Alta       |
+| 06  | Gerenciamento de estágios       | Como técnico da PRAE, desejo acompanhar o status dos discentes em estágio, para realizar o controle.     | Média      |
+| 07  | Documentação de estágio         | Como discente, desejo enviar documentos obrigatórios, para formalizar meu estágio.                       | Média      |
+| 08  | Documentação de estágio         | Como técnico da PRAE, desejo validar documentos enviados, para assegurar que estão corretos.             | Média      |
+| 09  | Notificações e comunicação      | Como discente, desejo receber notificações sobre meu processo de estágio, para acompanhar meu status.    | Média      |
+| 10  | Notificações e comunicação      | Como técnico da PRAE, desejo enviar atualizações e avisos aos discentes, para manter a comunicação ativa.| Média      |
+| 11  | Gestão administrativa           | Como técnico da PRAE, desejo gerenciar dados dos discentes e empresas, para manter o cadastro atualizado.| Baixa      |
+| 12  | Relatórios                      | Como técnico da PRAE, desejo gerar relatórios de vagas, alunos e status de estágio, para acompanhamento. | Baixa      |
+| 13  | Requisitos não Funcionais       | Como usuário, desejo que o sistema tenha uma interface responsiva, para acesso em qualquer dispositivo.  | Média      |
+| 14  | Requisitos não Funcionais       | Como desenvolvedor, desejo integração contínua, para garantir deploy automatizado e testes constantes.   | Alta       |
+| 15  | Requisitos não Funcionais       | Como usuário, desejo que o sistema seja seguro, para proteger meus dados pessoais.                       | Alta       |
+
+---
 
 ## 6. Características principais do produto
 
