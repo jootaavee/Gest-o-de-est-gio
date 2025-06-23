@@ -35,6 +35,8 @@ O desenvolvimento é guiado pela metodologia **SCRUM**, com entregas organizadas
 - Sprint 0: Definição do produto, backlog inicial, visão, CI configurada.
 - Sprint 1: Autenticação (login, cadastro), testes unitários, CI com testes.
 - Sprint 2: Funcionalidades principais do fluxo do usuário, testes de integração, modelo de dados, primeiro deploy para testes.
+- Sprint 3: Funcionalidades complementares, refatorações, requisitos não funcionais, testes de aceitação e métricas de testes.
+- Sprint 4: Documentação final, deploy final, apresentação, retrospectiva e avaliação.
 
 ---
 
