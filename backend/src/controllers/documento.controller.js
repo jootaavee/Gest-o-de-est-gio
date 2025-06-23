@@ -1,7 +1,7 @@
 const prisma = require("../prismaClient");
 const fs = require("fs");
 const path = require("path");
-const { DocumentType } = require("@prisma/client");
+const { DocumentType, UserRole } = require("@prisma/client");
 
 // Diretório de uploads
 const uploadDir = path.join(__dirname, "../../uploads");

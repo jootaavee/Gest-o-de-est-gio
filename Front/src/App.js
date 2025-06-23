@@ -11,7 +11,7 @@ import RegisterPage from './pages/auth/RegisterPage';
 
 import EditarPerfilPage from './pages/aluno/EditarPerfilPage';
 import ConfiguracoesPage from './pages/aluno/ConfiguracoesPage';
-import HomePage from './pages/aluno/HomePage';
+import HomePage from './pages/aluno/HomePage'; 
 import VagaDetalhesPage from './pages/aluno/VagaDetalhesPage';
 import MeusDocumentosPage from './pages/aluno/MeusDocumentosPage';
 import MinhasInscricoesPage from './pages/aluno/MinhasInscricoesPage';

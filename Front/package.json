@@ -17,7 +17,7 @@
     "react-dom": "^19.1.0",
     "react-i18next": "^15.5.3",
     "react-input-mask": "^2.0.4",
-    "react-router-dom": "^7.6.0",
+    "react-router-dom": "^7.6.2",
     "react-scripts": "5.0.1",
     "web-vitals": "^2.1.4"
   },
@@ -43,6 +43,12 @@
       "last 1 chrome version",
       "last 1 firefox version",
       "last 1 safari version"
+    ]
+  },
+  "jest": {
+    "moduleDirectories": [
+      "node_modules",
+      "src"
     ]
   }
 }

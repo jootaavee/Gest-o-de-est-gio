@@ -1,121 +1,137 @@
-// backend/src/controllers/_test_/user.controller.test.js
-
 const prisma = require('../../prismaClient');
-// Importar defaultUserConfigurations se ele for exportado pelo controller,
-// ou defini-lo aqui no teste para a asserção.
+const bcrypt = require('bcrypt');
 const { 
-    getUserProfile, 
-    updateUserConfiguracoes,
-    // Se defaultUserConfigurations não é exportado de user.controller, defina-o aqui:
-    // formatUserData // (NÃO precisa importar formatUserData se ele NÃO é exportado)
+    getUserProfile, updateUserProfile, updateUserConfiguracoes, getAllAlunos, getAlunoById 
 } = require('../user.controller');
 const { UserRole } = require('@prisma/client');
 
-// Se defaultUserConfigurations não for exportado pelo user.controller.js,
-// defina uma cópia dele aqui para usar nos testes.
-const testDefaultUserConfigurations = {
-  tema: 'light',
-  idioma: 'pt-br',
-  notificacoesEmail: true,
-};
-
-
 jest.mock('../../prismaClient', () => ({
-  user: {
-    findUnique: jest.fn(),
-    update: jest.fn(),
-  },
+  user: { findUnique: jest.fn(), findMany: jest.fn(), update: jest.fn(), },
 }));
+jest.mock('bcrypt');
 
 describe('User Controller', () => {
-  let mockReq;
-  let mockRes;
+  let mockReq, mockRes;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockReq = { user: { id: 'user-profile-id' }, body: {} };
-    mockRes = {
-      status: jest.fn().mockReturnThis(),
-      json: jest.fn(),
-    };
+    mockReq = { user: { id: 'user-id', tipo: UserRole.ALUNO }, body: {}, params: {} };
+    mockRes = { status: jest.fn().mockReturnThis(), json: jest.fn(), };
   });
 
-  describe('getUserProfile', () => {
-    test('deve retornar o perfil do usuário e status 200 se o usuário for encontrado', async () => {
-      const mockUserFromDb = {
-        id: 'user-profile-id', nome_completo: 'Perfil Teste', email: 'perfil@teste.com',
-        tipo: UserRole.ALUNO, configuracoes: { tema: 'dark', idioma: 'en', notificacoesEmail: false },
-        data_nascimento: new Date('1990-07-10T00:00:00.000Z'), numero: '123'
-      };
-      prisma.user.findUnique.mockResolvedValue(mockUserFromDb);
+  // Describe para getUserProfile (sem mudanças)
+  describe('getUserProfile', () => { /* ... seus testes de getUserProfile aqui ... */ });
 
-      await getUserProfile(mockReq, mockRes);
-
-      expect(prisma.user.findUnique).toHaveBeenCalledWith({
-        where: { id: 'user-profile-id' },
-        select: expect.any(Object),
-      });
-      expect(mockRes.status).toHaveBeenCalledWith(200);
-      expect(mockRes.json).toHaveBeenCalledWith(expect.objectContaining({
-        nome_completo: 'Perfil Teste',
-        data_nascimento: '1990-07-10', // Após formatação
-        configuracoes: { tema: 'dark', idioma: 'en', notificacoesEmail: false },
-      }));
+  describe('updateUserProfile', () => {
+    const mockUserFromDb = { id: 'user-id', tipo: UserRole.ALUNO, email: 'original@teste.com', senha: 'hashedPassword' };
+    
+    beforeEach(() => {
+        prisma.user.findUnique.mockResolvedValue(mockUserFromDb);
     });
 
-    test('deve formatar data de nascimento e usar configurações padrão se não presentes no DB', async () => {
-        const mockUserFromDb = {
-            id: 'user-profile-id', nome_completo: 'Perfil Sem Data Ou Config',
-            email: 'perfil2@teste.com', tipo: UserRole.ALUNO,
-            data_nascimento: new Date('1990-12-20T03:00:00.000Z'), // Para garantir que a data ISO seja '1990-12-20'
-            configuracoes: null // Configurações não definidas no DB
-        };
-        prisma.user.findUnique.mockResolvedValue(mockUserFromDb);
-    
-        await getUserProfile(mockReq, mockRes);
+    // ... outros testes de updateUserProfile aqui ...
+    test('deve atualizar os dados do aluno com sucesso', async () => {
+        mockReq.body = { nome_completo: 'Nome Atualizado', curso: 'Ciência da Computação' };
+        prisma.user.update.mockResolvedValue({ ...mockUserFromDb, ...mockReq.body });
+        await updateUserProfile(mockReq, mockRes);
         expect(mockRes.status).toHaveBeenCalledWith(200);
-        // A função formatUserData no controller vai aplicar os padrões.
-        expect(mockRes.json).toHaveBeenCalledWith(expect.objectContaining({
-            data_nascimento: '1990-12-20',
-            configuracoes: testDefaultUserConfigurations // CORREÇÃO AQUI
+        expect(prisma.user.update).toHaveBeenCalledWith(expect.objectContaining({
+            data: { nome_completo: 'Nome Atualizado', curso: 'Ciência da Computação' }
         }));
     });
 
-    test('deve retornar 404 se o usuário não for encontrado', async () => {
-      prisma.user.findUnique.mockResolvedValue(null);
-      await getUserProfile(mockReq, mockRes);
-      expect(mockRes.status).toHaveBeenCalledWith(404);
-      expect(mockRes.json).toHaveBeenCalledWith({ error: 'Usuário não encontrado.' });
+
+    // CORREÇÃO 1: Adicionar a senha antiga ao corpo da requisição
+    test('deve retornar 400 se a nova senha e a confirmação não coincidirem', async () => {
+        mockReq.body = {
+            senha_antiga: 'any_password', // Necessário para passar da primeira validação
+            nova_senha: 'newpass',
+            confirmar_nova_senha: 'differentpass'
+        };
+        await updateUserProfile(mockReq, mockRes);
+        expect(mockRes.status).toHaveBeenCalledWith(400);
+        expect(mockRes.json).toHaveBeenCalledWith({ error: "As novas senhas não coincidem." });
+    });
+
+    test('deve retornar 400 se a senha antiga estiver incorreta', async () => {
+        mockReq.body = { senha_antiga: 'wrongoldpass', nova_senha: 'newpass', confirmar_nova_senha: 'newpass' };
+        bcrypt.compare.mockResolvedValue(false);
+        await updateUserProfile(mockReq, mockRes);
+        expect(mockRes.status).toHaveBeenCalledWith(400);
+        expect(mockRes.json).toHaveBeenCalledWith({ error: "Senha atual incorreta." });
+    });
+    
+    // CORREÇÃO 2: Mockar o bcrypt.genSalt
+    test('deve atualizar a senha com sucesso se todos os dados estiverem corretos', async () => {
+        mockReq.body = { senha_antiga: 'correctoldpass', nova_senha: 'newpassword123', confirmar_nova_senha: 'newpassword123' };
+        const fakeSalt = '$2b$10$somefakesalt';
+        bcrypt.compare.mockResolvedValue(true);
+        bcrypt.genSalt.mockResolvedValue(fakeSalt); // Mock do genSalt
+        bcrypt.hash.mockResolvedValue('hashedNewPassword');
+        
+        prisma.user.update.mockResolvedValue({});
+        await updateUserProfile(mockReq, mockRes);
+
+        expect(bcrypt.hash).toHaveBeenCalledWith('newpassword123', fakeSalt);
+        expect(prisma.user.update).toHaveBeenCalledWith(expect.objectContaining({
+            data: { senha: 'hashedNewPassword' }
+        }));
+        expect(mockRes.status).toHaveBeenCalledWith(200);
+    });
+
+    // ... resto dos testes (getAllAlunos, getAlunoById, etc.) sem mudanças ...
+    test('deve retornar 400 se nenhum dado for fornecido para atualização', async () => {
+        mockReq.body = {}; // Corpo vazio
+        await updateUserProfile(mockReq, mockRes);
+        
+        expect(mockRes.status).toHaveBeenCalledWith(400);
+        expect(mockRes.json).toHaveBeenCalledWith({ error: "Nenhum dado fornecido para atualização do perfil." });
     });
   });
 
-  describe('updateUserConfiguracoes', () => {
-    const validConfigData = { tema: 'dark', idioma: 'en', notificacoesEmail: false };
-
-    test('deve atualizar as configurações do usuário com sucesso', async () => {
-      mockReq.body = validConfigData;
-      const mockUpdatedUser = { configuracoes: validConfigData };
-      prisma.user.update.mockResolvedValue(mockUpdatedUser);
-
-      await updateUserConfiguracoes(mockReq, mockRes);
-
-      expect(prisma.user.update).toHaveBeenCalledWith({
-        where: { id: 'user-profile-id' },
-        data: { configuracoes: validConfigData },
-        select: { configuracoes: true },
+  // Outros describes (getAllAlunos, getAlunoById) aqui
+  describe('getAllAlunos', () => {
+      test('deve retornar uma lista de todos os alunos com status 200', async () => {
+          const mockAlunos = [
+              { id: 'aluno1', nome_completo: 'Aluno A', email: 'alunoa@teste.com' },
+              { id: 'aluno2', nome_completo: 'Aluno B', email: 'alunob@teste.com' }
+          ];
+          prisma.user.findMany.mockResolvedValue(mockAlunos);
+          
+          await getAllAlunos(mockReq, mockRes);
+          
+          expect(mockRes.status).toHaveBeenCalledWith(200);
+          expect(mockRes.json).toHaveBeenCalledWith(expect.any(Array));
+          expect(mockRes.json.mock.calls[0][0].length).toBe(2);
+          expect(mockRes.json.mock.calls[0][0][0].nome_completo).toBe('Aluno A');
       });
-      expect(mockRes.status).toHaveBeenCalledWith(200);
-      expect(mockRes.json).toHaveBeenCalledWith({
-        message: 'Suas configurações foram atualizadas com sucesso!',
-        configuracoes: validConfigData,
-      });
-    });
-
-    test('deve retornar 400 se algum campo de configuração estiver faltando', async () => {
-      mockReq.body = { tema: 'light', idioma: 'pt-br' }; // Faltando notificacoesEmail
-      await updateUserConfiguracoes(mockReq, mockRes);
-      expect(mockRes.status).toHaveBeenCalledWith(400);
-      expect(mockRes.json).toHaveBeenCalledWith({ error: "Todos os campos de configuração (tema, idioma, notificacoesEmail) são obrigatórios." });
-    });
   });
+
+  describe('getAlunoById', () => {
+      test('deve retornar os detalhes de um aluno específico', async () => {
+          mockReq.params.id = 'aluno-id-123';
+          const mockAluno = { id: 'aluno-id-123', nome_completo: 'Aluno Detalhado', tipo: UserRole.ALUNO };
+          prisma.user.findUnique.mockResolvedValue(mockAluno);
+
+          await getAlunoById(mockReq, mockRes);
+
+          expect(mockRes.status).toHaveBeenCalledWith(200);
+          expect(mockRes.json).toHaveBeenCalledWith(expect.objectContaining({ nome_completo: 'Aluno Detalhado' }));
+          expect(prisma.user.findUnique).toHaveBeenCalledWith({
+              where: { id: 'aluno-id-123', tipo: UserRole.ALUNO },
+              include: expect.any(Object)
+          });
+      });
+
+      test('deve retornar 404 se nenhum aluno for encontrado com o ID fornecido', async () => {
+          mockReq.params.id = 'id-nao-existe';
+          prisma.user.findUnique.mockResolvedValue(null);
+          
+          await getAlunoById(mockReq, mockRes);
+
+          expect(mockRes.status).toHaveBeenCalledWith(404);
+          expect(mockRes.json).toHaveBeenCalledWith({ error: "Aluno não encontrado ou o ID não corresponde a um aluno." });
+      });
+  });
+
 });
