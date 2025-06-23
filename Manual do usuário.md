@@ -7,8 +7,8 @@ Este manual tem como objetivo guiar o usuário na configuração e execução do
 
 Antes de iniciar, certifique-se de ter as seguintes ferramentas instaladas em seu ambiente:
 
-- **Git**: Para clonar o repositório do projeto.
-- **Node.js e npm**: Para executar as aplicações JavaScript (backend e frontend).
+- **[Git](https://git-scm.com/downloads) ou cmd**: Para clonar o repositório do projeto.
+- **[Node.js e npm](https://nodejs.org/pt)**: Para executar as aplicações JavaScript (backend e frontend).
 
 ## 3. Configuração do projeto
 
@@ -89,7 +89,7 @@ cd ../backend
 npm run dev
 ```
 
-O backend será iniciado e estará acessível, por padrão, em `http://localhost:3001` (ou a porta configurada no seu `.env`).
+O backend será iniciado e estará acessível, por padrão, em [http://localhost:3001](http://localhost:3001) (ou na porta configurada no seu arquivo `.env`).
 
 ### 6.2. Iniciar o Frontend
 
@@ -100,8 +100,6 @@ cd Front
 npm start
 ```
 
-O frontend será iniciado e abrirá automaticamente no seu navegador padrão, geralmente em `http://localhost:3000`.
+O frontend será iniciado e abrirá automaticamente no seu navegador padrão, geralmente em [http://localhost:3000](http://localhost:3000).
 
 Agora o sistema de Gestão de Estágio estará em execução e pronto para ser utilizado.
-
-
